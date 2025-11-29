@@ -1,48 +1,60 @@
-# 🚀 Cloudflare Worker 随机图片 API & 链接管理器 (V13)
+# ⚡️ Cloudflare Worker 随机图片 API 
 
-这是一个高性能、功能丰富的随机图片链接分发服务，完全基于 **Cloudflare Worker** 和 **Cloudflare KV** 存储构建。
+本项目提供一个高性能、功能齐全的随机图片链接分发服务，基于 Cloudflare Worker 和 KV 存储构建。
 
-### ✨ 核心特性
+✨ **核心亮点：**
 
-* **极速分发：** 利用 Cloudflare 全球 CDN，实现超低延迟的图片链接重定向。
-* **标签筛选：** API 支持通过 `?tag=xxx` 参数精确获取特定分类的图片。
-* **分辨率控制：** API 支持通过 `?ratio=W:H` 参数筛选特定宽高比的图片。
-* **自动化维护 (Cron)：** 使用 Cron Triggers 定时自动检查并清理失效的图片链接。
-* **现代化管理面板：** 提供管理员登录界面，支持链接的批量添加、分页管理、批量删除、数据导入/导出。
-* **零服务器成本：** 仅需 Worker 和 KV 的免费额度即可长期稳定运行。
+* **极简部署：** 仅需复制 `index.js` 文件内容，并在 Cloudflare 仪表盘中粘贴即可。
+* **全自动维护：** 支持 Cron Triggers，定时自动检查并清理失效的图片链接。
+* **智能分发：** API 支持按 `tag` (标签) 和 `ratio` (宽高比) 筛选图片。
+* **图形化管理：** 提供管理员面板 (`/admin`)，支持链接批量添加、分页、删除和数据导入/导出。
 
 ---
 
-## 🛠️ 部署指南 (Setup)
+## 🛠️ 部署步骤 (3步完成)
 
-### 前置条件
+本项目旨在实现最快速的部署流程，无需安装任何本地工具。
 
-1.  一个 Cloudflare 账户。
-2.  安装 Cloudflare **Wrangler CLI**（用于部署）。
-    ```bash
-    npm install -g wrangler
-    ```
+### 步骤 1: 准备 KV 存储和 Worker
 
-### 1. 创建 KV 命名空间
+1.  **登录** Cloudflare 仪表盘。
+2.  导航到 **R2 / KV / D1** -> **KV**，点击 **创建命名空间**。
+3.  命名为 `IMAGE_LINKS`。
+4.  导航到 **Workers 和 Pages**，点击 **创建应用程序** -> **创建 Worker**。
+5.  点击 **部署 (Deploy)** 后，点击 **编辑代码 (Quick Edit)**。
 
-在 Cloudflare 仪表盘中创建一个 KV 命名空间，命名为 `IMAGE_LINKS` (或任何您喜欢的名称)，并记下它的 **ID**。
+### 步骤 2: 粘贴代码并配置变量
 
-### 2. 配置项目文件
+1.  打开项目中的 **`index.js`** 文件，**复制所有内容**。
+2.  在 Cloudflare Worker 的 **编辑代码 (Quick Edit)** 界面，将所有原有代码替换为复制的代码。
+3.  **保存并部署**。
+4.  在 Worker 的设置页面，导航到 **设置** -> **变量** -> **KV 命名空间绑定**。
+    * **变量名称 (Variable name)：** `IMAGE_LINKS`
+    * **KV 命名空间 (KV Namespace)：** 选择您在步骤 1 中创建的 `IMAGE_LINKS`。
+5.  在 Worker 的设置页面，导航到 **设置** -> **变量** -> **Secrets (环境变量)**。
+    * 点击 **添加 Secret**，分别设置以下三个变量：
+        * `ADMIN_USERNAME` (您的管理员用户名)
+        * `ADMIN_PASSWORD` (您的管理员密码，**请设置强密码**!)
+        * `SESSION_EXPIRY_SECONDS` (会话过期时间，例如 `3600` 秒)
 
-在您的项目根目录下创建 `index.js` 和 `wrangler.toml` 文件。
+### 步骤 3: 启用自动化维护 (Cron Triggers)
 
-**`index.js`:**
-将完整的 Worker 代码粘贴到此文件中。
+1.  在 Worker 的设置页面，导航到 **触发器 (Triggers)** 标签页。
+2.  在 **Cron Triggers** 部分，点击 **添加 Cron Trigger**。
+3.  输入 Cron 表达式，例如：**`0 0 * * *`**
+    * *说明：* `0 0 * * *` 表示每天 00:00 UTC (协调世界时) 自动运行维护任务，清理失效链接。
+4.  点击 **保存**。
 
-**`wrangler.toml`:**
-将以下内容复制到 `wrangler.toml` 并替换您的 KV ID：
+**部署完成！** 现在访问您的 Worker 域名下的 `/admin` 路径即可开始管理图片链接。
 
-```toml
-name = "random-image-api-worker" 
-main = "index.js" 
-compatibility_date = "2024-05-01" 
+---
 
-# 绑定 KV 命名空间
-[[kv_namespaces]]
-binding = "IMAGE_LINKS" # 必须与 Worker 代码中的变量名 IMAGE_LINKS 匹配
-id = "YOUR_KV_NAMESPACE_ID_HERE" # <<< 替换成您在 Cloudflare 创建的 ID
+## 📁 单文件：`index.js`
+
+这是您需要上传到 GitHub 的文件。请确保它包含您最终确认的 V13 完整代码。
+
+> **提示：** 您可以将上面**用户回复中完整的 V13 代码**保存为 `index.js` 文件。
+
+---
+
+### 您的 GitHub 仓库结构：
